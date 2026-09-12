@@ -40,7 +40,8 @@ export default async function handler(req: any, res: any) {
 
   const query = (req.query?.q || "").trim();
   const pageToken = (req.query?.pageToken || "").trim();
-  const maxResults = Math.min(parseInt(req.query?.maxResults || "15", 10), 30);
+  const parsedMaxResults = parseInt(req.query?.maxResults || "15", 10);
+  const maxResults = Math.max(1, Math.min(Number.isFinite(parsedMaxResults) ? parsedMaxResults : 15, 30));
 
   if (!query) {
     return res.status(400).json({
@@ -49,7 +50,8 @@ export default async function handler(req: any, res: any) {
     });
   }
 
-  const apiKey = process.env.YOUTUBE_API_KEY;
+  const apiKey = process.env.YOUTUBE_API_KEY?.trim();
+  let apiError: { status?: number; reason?: string; message?: string } | null = null;
 
   if (apiKey && apiKey !== "YOUR_YOUTUBE_API_KEY") {
     try {
@@ -103,11 +105,24 @@ export default async function handler(req: any, res: any) {
         });
       } else {
         console.warn("YouTube API error response:", data);
-        // If quota exceeded or invalid key, gracefully provide curated fallback
+        apiError = {
+          status: response.status,
+          reason: data?.error?.errors?.[0]?.reason || data?.error?.status || "youtube_api_error",
+          message: data?.error?.message || "YouTube Data API request failed"
+        };
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("YouTube API request failed:", err);
+      apiError = {
+        reason: "request_failed",
+        message: err?.message || "YouTube Data API request failed"
+      };
     }
+  } else if (!apiKey) {
+    apiError = {
+      reason: "missing_api_key",
+      message: "YOUTUBE_API_KEY is not configured"
+    };
   }
 
   // Graceful curated fallback for when YOUTUBE_API_KEY is unset or quota is exceeded
@@ -249,9 +264,9 @@ export default async function handler(req: any, res: any) {
     items: finalItems,
     nextPageToken: null,
     totalResults: finalItems.length,
+    source: "fallback",
     isCuratedFallback: true,
-    message: apiKey
-      ? "YouTube Data API quota reached or request restricted. Showing curated music discovery."
-      : "YouTube API Key not configured. Add YOUTUBE_API_KEY in environment to enable live search."
+    apiError,
+    message: apiError?.message || "Live YouTube search is unavailable. Showing curated music discovery."
   });
 }
