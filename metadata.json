@@ -1,0 +1,6 @@
+{
+  "name": "MUSIQ — Ultimate Music Player",
+  "description": "Premium music player with live ambient context, real-time clock, Open-Meteo weather intelligence, advanced equalizer, time-synced lyrics, real-time visualizers, playlist manager, audio effects, and local library support.",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
