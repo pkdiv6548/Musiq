@@ -1,11 +1,11 @@
 // Service Worker for MUSIQ PWA — Offline App Shell & Network Strategies
-const CACHE_NAME = "musiq-pwa-v3";
+const CACHE_NAME = "musiq-pwa-v4";
 const SHELL_ASSETS = [
   "/",
   "/index.html",
-  "/public/icon.svg",
-  "/public/manifest.json",
-  "/public/manifest.webmanifest"
+  "/icon.svg",
+  "/manifest.json",
+  "/manifest.webmanifest"
 ];
 
 self.addEventListener("install", (event) => {
