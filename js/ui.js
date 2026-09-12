@@ -519,15 +519,28 @@ export class UIManager {
               thumbWrap?.addEventListener("mouseenter", () => { overlay.style.opacity = "1"; });
               thumbWrap?.addEventListener("mouseleave", () => { overlay.style.opacity = "0"; });
 
-              const playThisTrack = () => {
-                state.addToQueueNext(track);
-                const idx = state.queue.findIndex(s => s.id === track.id);
-                if (idx !== -1) {
-                  audioEngine.playTrackAtIndex(idx);
-                } else {
-                  state.setQueue([track, ...state.queue], 0);
-                  audioEngine.playTrackAtIndex(0);
+              const playThisTrack = (event) => {
+                // This handler must use the actual AppState API. The old code
+                // called state.addToQueueNext(), which does not exist and
+                // stopped execution before audioEngine.playTrackAtIndex().
+                event?.stopPropagation?.();
+
+                let idx = state.queue.findIndex(song => song.id === track.id);
+
+                // Reuse an existing queue item when possible. Otherwise insert
+                // the YouTube track immediately after the current queue item.
+                if (idx === -1) {
+                  state.addToQueue(track, true);
+                  idx = state.queue.findIndex(song => song.id === track.id);
                 }
+
+                // Defensive fallback for an empty/invalid persisted queue.
+                if (idx === -1) {
+                  state.setQueue([track], 0);
+                  idx = 0;
+                }
+
+                audioEngine.playTrackAtIndex(idx);
                 showToast(`Now playing: ${track.title}`);
               };
 
