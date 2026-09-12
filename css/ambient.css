@@ -8,7 +8,9 @@
 button.search-filter-tab {
     white-space: nowrap;
 }
-
+button.local-tab-btn {
+    white-space: nowrap;
+}
 .ambient-header-pill {
   display: inline-flex;
   align-items: center;
